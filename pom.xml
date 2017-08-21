@@ -5,11 +5,22 @@
     <artifactId>lasertarget</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
+    <properties>
+        <lib.log4j-over-slf4j.version>1.7.7</lib.log4j-over-slf4j.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.openpnp</groupId>
             <artifactId>opencv</artifactId>
             <version>3.2.0-1</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>${lib.log4j-over-slf4j.version}</version>
+        </dependency>
+
     </dependencies>
 </project>

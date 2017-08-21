@@ -4,8 +4,14 @@ import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+import java.util.Random;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -17,23 +23,26 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class LaserTarget
+public class TargetImage
 {
+
+    // private static Logger LOGGER =
+    // LoggerFactory.getLogger(LaserTarget.class);
 
     public static void main(String[] args)
     {
-        System.loadLibrary("opencv_java330");
-        LaserTarget laserTarget = new LaserTarget();
-        laserTarget.loadAndDetect();
+        TargetImage laserTarget = new TargetImage();
+        Mat m = Imgcodecs.imread(System.getProperty(LaserTargetFrame.IMAGE_FILENAME_PROPERTY));
+        Mat output = Imgcodecs.imread(LaserTargetFrame.OUTPUT_FILENAME_PROPERTY);
+        Mat shot = Imgcodecs.imread(LaserTargetFrame.SHOT_FILENAME_PROPERTY);
+        laserTarget.detectShot(m, output, shot);
     }
 
-    private void loadAndDetect()
+    public void detectShot(final Mat m, final Mat output, final Mat shot)
     {
-        Mat m = Imgcodecs.imread("D:\\BDA\\lasertarget\\src\\main\\resources\\target3.bmp");
-        Mat output = Imgcodecs.imread("D:\\BDA\\lasertarget\\src\\main\\resources\\target2.bmp");
-        Mat shot = Imgcodecs.imread("D:\\BDA\\lasertarget\\src\\main\\resources\\shot.bmp");
-
         if (!m.empty())
         {
             // Convert to hsv
@@ -65,8 +74,17 @@ public class LaserTarget
                 if (rect.height > 10)
                 {
                     int radius = rect.height / 2;
-                    // Imgproc.circle(output, new Point(rect.x + radius,rect.y+radius), 15, new Scalar(0,0,0));
+                    // Imgproc.circle(output, new Point(rect.x +
+                    // radius,rect.y+radius), 15, new Scalar(0,0,0));
                     Rect roi = new Rect(rect.x, rect.y, shot.width(), shot.height());
+                    /*
+                     * int lower = 0; int upper = 100; int x = (int)
+                     * (Math.random() * (upper - lower)) + lower; int y = (int)
+                     * (Math.random() * (upper - lower)) + lower; int midX =
+                     * output.width() / 2; int midY = output.height() / 2; Rect
+                     * roi = new Rect(midX + x, midY + y, shot.width(),
+                     * shot.height());
+                     */
                     shot.copyTo(new Mat(output, roi));
                     double score = calculateScore(output.width() / 2, output.height() / 2, rect.x + radius, rect.y + radius);
                     System.out.println("Score is: " + score);
@@ -77,8 +95,6 @@ public class LaserTarget
             // frameS.release();
             frameV.release();
             // m.release();
-            BufferedImage image = mat2BufferedImage(output);
-            displayImage(image);
         }
     }
 
@@ -90,32 +106,4 @@ public class LaserTarget
         return score;
     }
 
-    private BufferedImage mat2BufferedImage(Mat m)
-    {
-        int type = BufferedImage.TYPE_BYTE_GRAY;
-        if (m.channels() > 1)
-        {
-            type = BufferedImage.TYPE_3BYTE_BGR;
-        }
-        int bufferSize = m.channels() * m.cols() * m.rows();
-        byte[] b = new byte[bufferSize];
-        m.get(0, 0, b); // get all the pixels
-        BufferedImage image = new BufferedImage(m.cols(), m.rows(), type);
-        final byte[] targetPixels = ((DataBufferByte)image.getRaster().getDataBuffer()).getData();
-        System.arraycopy(b, 0, targetPixels, 0, b.length);
-        return image;
-    }
-
-    private void displayImage(Image img2)
-    {
-        ImageIcon icon = new ImageIcon(img2);
-        JFrame frame = new JFrame();
-        frame.setLayout(new FlowLayout());
-        frame.setSize(img2.getWidth(null) + 50, img2.getHeight(null) + 50);
-        JLabel lbl = new JLabel();
-        lbl.setIcon(icon);
-        frame.add(lbl);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
 }
